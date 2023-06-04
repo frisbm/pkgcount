@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	_ "embed"
 	"fmt"
 	"golang.org/x/exp/slices"
 	"log"
@@ -13,6 +14,9 @@ import (
 	"sync"
 	"text/template"
 )
+
+//go:embed markdown.tmpl
+var markdownTemplate string
 
 var (
 	importRegexBlock  = regexp.MustCompile(`^\s*"(.+)"\s*$`)
@@ -78,7 +82,7 @@ func (pc *PackageCounter) GenerateMarkdown() (string, error) {
 			return len(items) == 0
 		},
 	}
-	tmpl, err := template.New("markdown.tmpl").Funcs(funcMap).ParseFiles("markdown.tmpl")
+	tmpl, err := template.New("markdown.tmpl").Funcs(funcMap).Parse(markdownTemplate)
 	if err != nil {
 		return "", err
 	}
