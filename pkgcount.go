@@ -27,7 +27,7 @@ func main() {
 	flag.StringVar(&args.out, "o", "", "Provide a name for a file output")
 	flag.StringVar(&args.dir, "d", ".", "Directory to run")
 	flag.StringVar(&args.exclude, "exclude", "", "Exclude files using a regular expression")
-	flag.IntVar(&args.lte, "lte", math.MaxInt, "Return only packages with counts less than or equal to some number")
+	flag.IntVar(&args.lte, "lte", 0, "Return only packages with counts less than or equal to some number")
 	flag.IntVar(&args.gte, "gte", 0, "Return only packages with counts greater than or equal to some number")
 
 	flag.Parse()
@@ -43,6 +43,9 @@ func run(args Args) {
 	moduleName, err := utils.GetModuleName(args.dir)
 	if err != nil {
 		log.Fatal(err)
+	}
+	if args.lte == 0 {
+		args.lte = math.MaxInt
 	}
 	pkgCounter := NewPackageCounter(args.dir, moduleName, args.exclude, args.lte, args.gte)
 
