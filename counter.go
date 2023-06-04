@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/frisbm/pkgcount/utils"
 	"golang.org/x/exp/slices"
 	"log"
 	"os"
@@ -29,19 +28,21 @@ type Result struct {
 }
 
 type PackageCounter struct {
-	dir     string
-	exclude string
-	lte     int
-	gte     int
-	result  Result
+	dir        string
+	exclude    string
+	lte        int
+	gte        int
+	moduleName string
+	result     Result
 }
 
-func NewPackageCounter(dir string, exclude string, lte, gte int) *PackageCounter {
+func NewPackageCounter(dir string, moduleName string, exclude string, lte, gte int) *PackageCounter {
 	return &PackageCounter{
-		dir:     dir,
-		lte:     lte,
-		gte:     gte,
-		exclude: exclude,
+		dir:        dir,
+		lte:        lte,
+		gte:        gte,
+		exclude:    exclude,
+		moduleName: moduleName,
 	}
 }
 
@@ -129,11 +130,6 @@ func (pc *PackageCounter) countPackages(files []string) (Result, error) {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
-	moduleName, err := utils.GetModuleName(pc.dir)
-	if err != nil {
-		return Result{}, err
-	}
-
 	for _, file := range files {
 		wg.Add(1)
 		go func(file string) {
@@ -149,7 +145,7 @@ func (pc *PackageCounter) countPackages(files []string) (Result, error) {
 			// Increment the package count for each import
 			mu.Lock()
 			for _, pkg := range imports {
-				if strings.Contains(pkg, moduleName) {
+				if strings.Contains(pkg, pc.moduleName) {
 					internalPackageCounts[pkg]++
 				} else {
 					externalPackageCounts[pkg]++

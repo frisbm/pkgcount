@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	markdown "github.com/MichaelMure/go-term-markdown"
+	"github.com/frisbm/pkgcount/utils"
 	"log"
 	"math"
 	"os"
@@ -39,9 +40,13 @@ func main() {
 }
 
 func run(args Args) {
-	pkgCounter := NewPackageCounter(args.dir, args.exclude, args.lte, args.gte)
+	moduleName, err := utils.GetModuleName(args.dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pkgCounter := NewPackageCounter(args.dir, moduleName, args.exclude, args.lte, args.gte)
 
-	err := pkgCounter.CountPackages()
+	err = pkgCounter.CountPackages()
 	if err != nil {
 		log.Fatal(err)
 	}
