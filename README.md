@@ -29,7 +29,7 @@ Example from this project:
 | sync | 1 |
 
 
-### install
+### Install
 
     go install github.com/frisbm/pkgcount@latest
 
