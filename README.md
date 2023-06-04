@@ -4,29 +4,30 @@ A simple tool to count internal &amp; external package use for go projects
 
 Example from this project:
 
-
 **Internal Package Counts**
 
-| Package | Count |
-| :---  |  ---: |
-| github.com/frisbm/pkgcount/utils | 1 |
+| Package        |        Count |
+| :---           |         ---: |
+|github.com/frisbm/pkgcount/utils |1 |
 
 **External Package Counts**
 
-| Package | Count |
-| :---  |  ---: |
-| strings | 2 |
-| log | 2 |
-| os | 2 |
-| os/exec | 1 |
-| bufio | 1 |
-| fmt | 1 |
-| golang.org/x/exp/slices | 1 |
-| path/filepath | 1 |
-| flag | 1 |
-| math | 1 |
-| regexp | 1 |
-| sync | 1 |
+| Package        |        Count |
+| :---           |         ---: |
+|strings |2 |
+|os |2 |
+|log |2 |
+|golang.org/x/exp/slices |1 |
+|os/exec |1 |
+|bytes |1 |
+|math |1 |
+|sync |1 |
+|flag |1 |
+|fmt |1 |
+|path/filepath |1 |
+|regexp |1 |
+|text/template |1 |
+|bufio |1 |
 
 
 ### Install

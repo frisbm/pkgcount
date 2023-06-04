@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"golang.org/x/exp/slices"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"text/template"
 )
 
 var (
@@ -70,29 +72,22 @@ func sortPackageCounts(i, j PackageCount) bool {
 	return i.Count > j.Count
 }
 
-func (pc *PackageCounter) GenerateMarkdown() string {
-	// Display the most used packages
-	var display = "\n"
-	tableHeader := "| Package | Count |\n" + "| :---  |  ---: |\n"
-
-	display = display + "\n**Internal Package Counts**\n\n" + tableHeader
-	if len(pc.result.Internal) > 0 {
-		for _, pkgCount := range pc.result.Internal {
-			display = display + fmt.Sprintf("| %s | %d |\n", pkgCount.Package, pkgCount.Count)
-		}
-	} else {
-		display = display + "| - | 0 |\n"
+func (pc *PackageCounter) GenerateMarkdown() (string, error) {
+	funcMap := map[string]any{
+		"isEmpty": func(items []PackageCount) bool {
+			return len(items) == 0
+		},
+	}
+	tmpl, err := template.New("markdown.tmpl").Funcs(funcMap).ParseFiles("markdown.tmpl")
+	if err != nil {
+		return "", err
 	}
 
-	display = display + "\n**External Package Counts**\n\n" + tableHeader
-	if len(pc.result.External) > 0 {
-		for _, pkgCount := range pc.result.External {
-			display = display + fmt.Sprintf("| %s | %d |\n", pkgCount.Package, pkgCount.Count)
-		}
-	} else {
-		display = display + "| - | 0 |\n"
+	var res bytes.Buffer
+	if err = tmpl.Execute(&res, pc.result); err != nil {
+		return "", err
 	}
-	return display
+	return res.String(), nil
 }
 
 func (pc *PackageCounter) findGoFiles() ([]string, error) {

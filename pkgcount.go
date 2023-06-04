@@ -54,7 +54,11 @@ func run(args Args) {
 		log.Fatal(err)
 	}
 
-	generatedMarkdown := pkgCounter.GenerateMarkdown()
+	generatedMarkdown, err := pkgCounter.GenerateMarkdown()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	markdownBytes := []byte(generatedMarkdown)
 	if !args.unrendered {
 		markdownBytes = markdown.Render(generatedMarkdown, 80, 1)
