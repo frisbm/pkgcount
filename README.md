@@ -42,19 +42,19 @@ Example from this project:
 #### The flags are:
 
 	-h
-	    Print help message with args and descriptions
+        Print help message with args and descriptions
 	-u
-	    Set to make the final resulting markdown return unrendered
+        Set to make the final resulting markdown return unrendered
 	-o
-		Output to a file, the rendered markdown looks kind of funny in a file, will
-		most likely be used in conjuction with -u
+        Output to a file, the rendered markdown looks kind of funny in a file, will
+        most likely be used in conjuction with -u
 	-d
-		Which director/filepath to run on, defaults to current working directory
-	-exclude
-		Supply a Regular Expression here to exclude certain files, directories, etc.
+        Which director/filepath to run on, defaults to current working directory
 	-lte
-		Will filter the counts of the packages and only return those where counts are
-		less than or equal to the int you supply
+        Will filter the counts of the packages and only return those where counts are
+        less than or equal to the int you supply
 	-gte
-		Will filter the counts of the packages and only return those where counts are
-		greater than or equal to the int you supply
+        Will filter the counts of the packages and only return those where counts are
+        greater than or equal to the int you supply
+	-exclude
+        Supply a Regular Expression here to exclude certain files, directories, etc.
