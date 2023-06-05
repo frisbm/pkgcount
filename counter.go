@@ -15,7 +15,7 @@ import (
 	"text/template"
 )
 
-//go:embed markdown.tmpl
+//go:embed templates/markdown.tmpl
 var markdownTemplate string
 
 var (
