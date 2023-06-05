@@ -8,7 +8,7 @@ lint:
 
 build:
 	go build
-	mv pkgcount ~/golang/bin/pkgcount
+	go install
 
 validate-tag-arg:
 ifeq ("", "$(v)")
