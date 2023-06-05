@@ -41,20 +41,22 @@ Example from this project:
 
 #### The flags are:
 
-	-h
-        Print help message with args and descriptions
-	-u
-        Set to make the final resulting markdown return unrendered
-	-o
-        Output to a file, the rendered markdown looks kind of funny in a file, will
-        most likely be used in conjuction with -u
-	-d
-        Which director/filepath to run on, defaults to current working directory
-	-lte
-        Will filter the counts of the packages and only return those where counts are
-        less than or equal to the int you supply
-	-gte
-        Will filter the counts of the packages and only return those where counts are
-        greater than or equal to the int you supply
-	-exclude
-        Supply a Regular Expression here to exclude certain files, directories, etc.
+    -h
+        Display the help message along with the list of arguments and their descriptions.
+    -u
+        Set this option to retrieve the final resulting markdown in an unrendered format.
+    -o
+        Save the output to a file. Please note that the rendered markdown might appear 
+        differently in a file. This option is typically used in conjunction with -u.
+    -d
+        Specify the directory or file path to execute the operation on. By default, 
+        it uses the current working directory.
+    -lte
+        Filter the package counts and only display those with counts less than or 
+        equal to the specified integer.
+    -gte
+        Filter the package counts and only display those with counts greater than or
+        equal to the specified integer.
+    -exclude
+        Enter a regular expression here to exclude specific files, directories,
+        or other entities.
