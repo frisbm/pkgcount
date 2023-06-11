@@ -22,13 +22,13 @@ type Args struct {
 func main() {
 	var args Args
 
-	flag.BoolVar(&args.help, "h", false, "Help")
-	flag.BoolVar(&args.unrendered, "u", false, "Output markdown without being rendered")
-	flag.StringVar(&args.out, "o", "", "Provide a name for a file output")
-	flag.StringVar(&args.dir, "d", ".", "Directory to run")
-	flag.StringVar(&args.exclude, "exclude", "", "Exclude files using a regular expression")
-	flag.IntVar(&args.lte, "lte", 0, "Return only packages with counts less than or equal to some number")
-	flag.IntVar(&args.gte, "gte", 0, "Return only packages with counts greater than or equal to some number")
+	flag.BoolVar(&args.help, "h", false, "Display help messages with argument list and descriptions.")
+	flag.BoolVar(&args.unrendered, "u", false, "Retrieve markdown in unrendered format.")
+	flag.StringVar(&args.out, "o", "", "Save output to file. Used with -u to preserve format.")
+	flag.StringVar(&args.dir, "d", ".", "Specify directory or file path. Default is current directory.")
+	flag.StringVar(&args.exclude, "exclude", "", "Exclude specific files, directories, or other entities with regex.")
+	flag.IntVar(&args.lte, "lte", 0, "Display package counts less than or equal to specified integer.")
+	flag.IntVar(&args.gte, "gte", 0, "Display package counts greater than or equal to specified integer.")
 
 	flag.Parse()
 	if args.help {

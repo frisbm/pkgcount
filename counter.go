@@ -15,6 +15,8 @@ import (
 	"text/template"
 )
 
+// markdownTemplate is the markdown template that will be used to generate output.
+//
 //go:embed templates/markdown.tmpl
 var markdownTemplate string
 
@@ -23,16 +25,19 @@ var (
 	importRegexSingle = regexp.MustCompile(`\s*"(.+)"\s*$`)
 )
 
+// PackageCount contains a package and its count.
 type PackageCount struct {
 	Package string
 	Count   int
 }
 
+// Result contains the internal and external package counts.
 type Result struct {
 	Internal []PackageCount
 	External []PackageCount
 }
 
+// PackageCounter counts internal and external packages in a Go codebase
 type PackageCounter struct {
 	dir        string
 	exclude    string
@@ -42,6 +47,9 @@ type PackageCounter struct {
 	result     Result
 }
 
+// NewPackageCounter returns a new PackageCounter.
+// It takes in the directory to scan, module name to exclude, regex patterns to exclude files and counts-gte and counts-lte
+// which can be used to filter packages in the results.
 func NewPackageCounter(dir string, moduleName string, exclude string, lte, gte int) *PackageCounter {
 	return &PackageCounter{
 		dir:        dir,
@@ -52,6 +60,7 @@ func NewPackageCounter(dir string, moduleName string, exclude string, lte, gte i
 	}
 }
 
+// CountPackages counts the number of internal and external packages in the specified directory.
 func (pc *PackageCounter) CountPackages() error {
 	goFiles, err := pc.findGoFiles()
 	if err != nil {
@@ -76,6 +85,7 @@ func sortPackageCounts(i, j PackageCount) bool {
 	return i.Count > j.Count
 }
 
+// GenerateMarkdown generates markdown output with the internal and external package counts.
 func (pc *PackageCounter) GenerateMarkdown() (string, error) {
 	funcMap := map[string]any{
 		"isEmpty": func(items []PackageCount) bool {
@@ -94,6 +104,7 @@ func (pc *PackageCounter) GenerateMarkdown() (string, error) {
 	return res.String(), nil
 }
 
+// findGoFiles returns a slice of paths to Go files found in pc.dir, that match exclude patterns if any.
 func (pc *PackageCounter) findGoFiles() ([]string, error) {
 	var goFiles []string
 
@@ -123,6 +134,7 @@ func (pc *PackageCounter) findGoFiles() ([]string, error) {
 	return goFiles, nil
 }
 
+// countPackages returns the internal and external package counts that are used in a Go codebase.
 func (pc *PackageCounter) countPackages(files []string) (Result, error) {
 	internalPackageCounts := make(map[string]int)
 	externalPackageCounts := make(map[string]int)
@@ -171,6 +183,7 @@ func (pc *PackageCounter) countPackages(files []string) (Result, error) {
 	return result, nil
 }
 
+// extractImports returns the imports declared in a Go file.
 func (pc *PackageCounter) extractImports(file string) (imports []string, err error) {
 	f, err := os.Open(file)
 	if err != nil {
