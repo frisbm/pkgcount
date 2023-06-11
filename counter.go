@@ -140,7 +140,7 @@ func (pc *PackageCounter) findGoFiles() ([]string, error) {
 
 // countPackages returns the internal and external package counts that are used in a Go codebase.
 func (pc *PackageCounter) countPackages(files []string) (Result, error) {
-	numWorkers := runtime.NumCPU() // Use all available CPU cores
+	numWorkers := runtime.NumCPU() * 2 // limit number of workers
 	filesChan := make(chan string)
 	resultsChan := make(chan *map[string]int)
 
