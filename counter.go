@@ -6,12 +6,11 @@ import (
 	_ "embed"
 	"fmt"
 	"golang.org/x/exp/slices"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
-	"sync"
 	"text/template"
 )
 
@@ -39,12 +38,13 @@ type Result struct {
 
 // PackageCounter counts internal and external packages in a Go codebase
 type PackageCounter struct {
-	dir        string
-	exclude    string
-	lte        int
-	gte        int
-	moduleName string
-	result     Result
+	dir           string
+	exclude       string
+	lte           int
+	gte           int
+	moduleName    string
+	result        Result
+	excludeRegExp *regexp.Regexp
 }
 
 // NewPackageCounter returns a new PackageCounter.
@@ -62,6 +62,14 @@ func NewPackageCounter(dir string, moduleName string, exclude string, lte, gte i
 
 // CountPackages counts the number of internal and external packages in the specified directory.
 func (pc *PackageCounter) CountPackages() error {
+	if pc.exclude != "" {
+		excludeRegExp, err := regexp.Compile(pc.exclude)
+		if err != nil {
+			return fmt.Errorf("bad regular expression: '%s' error: %s", pc.exclude, err.Error())
+		}
+		pc.excludeRegExp = excludeRegExp
+	}
+
 	goFiles, err := pc.findGoFiles()
 	if err != nil {
 		return fmt.Errorf("could not find .go files: %s", err.Error())
@@ -114,11 +122,7 @@ func (pc *PackageCounter) findGoFiles() ([]string, error) {
 		}
 		if !info.IsDir() && filepath.Ext(path) == ".go" {
 			if pc.exclude != "" {
-				compiled, err := regexp.Compile(pc.exclude)
-				if err != nil {
-					log.Fatalf("bad regular expression: '%s' error: %s", pc.exclude, err.Error())
-				}
-				if compiled.MatchString(path) {
+				if pc.excludeRegExp.MatchString(path) {
 					return nil
 				}
 			}
@@ -136,37 +140,60 @@ func (pc *PackageCounter) findGoFiles() ([]string, error) {
 
 // countPackages returns the internal and external package counts that are used in a Go codebase.
 func (pc *PackageCounter) countPackages(files []string) (Result, error) {
-	internalPackageCounts := make(map[string]int)
-	externalPackageCounts := make(map[string]int)
-	var wg sync.WaitGroup
-	var mu sync.Mutex
+	numWorkers := runtime.NumCPU() // Use all available CPU cores
+	filesChan := make(chan string)
+	resultsChan := make(chan *map[string]int)
 
-	for _, file := range files {
-		wg.Add(1)
-		go func(file string) {
-			defer wg.Done()
+	// Start worker goroutines
+	for i := 0; i < numWorkers; i++ {
+		go func() {
+			for file := range filesChan {
+				packageCounts := make(map[string]int)
 
-			// Extract import statements from the Go file
-			imports, err := pc.extractImports(file)
-			if err != nil {
-				fmt.Printf("Error extracting imports from %s: %v\n", file, err)
-				return
-			}
-
-			// Increment the package count for each import
-			mu.Lock()
-			for _, pkg := range imports {
-				if strings.Contains(pkg, pc.moduleName) {
-					internalPackageCounts[pkg]++
-				} else {
-					externalPackageCounts[pkg]++
+				// Extract import statements from the Go file
+				imports, err := pc.extractImports(file)
+				if err != nil {
+					fmt.Printf("Error extracting imports from %s: %v\n", file, err)
+					continue
 				}
+				// Increment the package count for each import
+				for _, pkg := range imports {
+					if strings.Contains(pkg, pc.moduleName) {
+						packageCounts[pkg]++
+					} else {
+						packageCounts[pkg]++
+					}
+				}
+				// Send results back to main goroutine
+				resultsChan <- &packageCounts
 			}
-			mu.Unlock()
-		}(file)
+		}()
 	}
 
-	wg.Wait()
+	// Send files to worker goroutines
+	go func() {
+		for _, file := range files {
+			filesChan <- file
+		}
+		close(filesChan)
+	}()
+
+	internalPackageCounts := make(map[string]int)
+	externalPackageCounts := make(map[string]int)
+
+	// Collect and combine results
+	for i := 0; i < len(files); i++ {
+		packageCounts := <-resultsChan
+		if packageCounts != nil {
+			for pkg, count := range *packageCounts {
+				if strings.Contains(pkg, pc.moduleName) {
+					internalPackageCounts[pkg] += count
+				} else {
+					externalPackageCounts[pkg] += count
+				}
+			}
+		}
+	}
 
 	var result Result
 	for pkg, count := range internalPackageCounts {
@@ -198,28 +225,27 @@ func (pc *PackageCounter) extractImports(file string) (imports []string, err err
 
 	scanner := bufio.NewScanner(f)
 
+	readingImports := false
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "import (") {
-			// Start of import block
-			break
-		}
 		// single import
 		if strings.HasPrefix(line, "import \"") {
 			if match := importRegexSingle.FindStringSubmatch(line); match != nil {
 				imports = append(imports, match[1])
+				break
 			}
 		}
-	}
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, ")") {
-			// End of import block
-			break
+		if strings.HasPrefix(line, "import (") {
+			readingImports = true
 		}
-		if match := importRegexBlock.FindStringSubmatch(line); match != nil {
-			imports = append(imports, match[1])
+
+		if readingImports {
+			if match := importRegexBlock.FindStringSubmatch(line); match != nil {
+				imports = append(imports, match[1])
+			}
+			if strings.HasPrefix(line, ")") {
+				break
+			}
 		}
 	}
 
