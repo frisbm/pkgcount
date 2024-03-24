@@ -1,27 +1,33 @@
-.PHONY: fmt lint build
 
+.PHONY: help
+# help:
+#    Print this help message
+help:
+	@grep -o '^\#.*' Makefile | cut -d" " -f2-
+
+.PHONY: fmt
+# fmt:
+#    Format go code
 fmt:
-	gofmt -s -w .
+	goimports -local github.com/frisbm -w ./
 
+.PHONY: lint
+# lint:
+#    Lint the code
 lint:
 	golangci-lint run
 
+.PHONY: build
+# build:
+#    Build and install the binary
 build:
-	go build
-	go install
+	go build -o ./tmp .
+	rm -rf "$$GOPATH/bin/pkgcount"
+	go install .
 
-validate-tag-arg:
-ifeq ("", "$(v)")
-	@echo "version arg (v) must be used with the 'tag' target"
-	@exit 1;
-endif
-ifneq ("v", "$(shell echo $(v) | head -c 1)")
-	@echo "version arg (v) must begin with v"
-	@exit 1;
-endif
-
-# ex: make tag v=v0.1.0
-tag: validate-tag-arg
-	@echo "creating tag $(v)"
-	git tag $(v)
-	git push origin $(v)
+.PHONY: tag
+# tag:
+#    Create a tag for the commits since the last tag and push it to the remote
+tag:
+	@echo "creating tag"
+	bash ./scripts/tag.sh
