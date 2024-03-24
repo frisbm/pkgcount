@@ -1,78 +1,53 @@
 package main
 
 import (
+	"context"
 	"flag"
-	markdown "github.com/MichaelMure/go-term-markdown"
-	"github.com/frisbm/pkgcount/utils"
+	"fmt"
 	"log"
 	"math"
 	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/frisbm/pkgcount/internal/pkgcount"
+
+	"github.com/frisbm/pkgcount/internal/models"
 )
 
-type Args struct {
-	help       bool
-	unrendered bool
-	exclude    string
-	lte        int
-	gte        int
-	out        string
-	dir        string
-}
-
 func main() {
-	var args Args
+	ctx, cancel := context.WithCancel(context.Background())
 
-	flag.BoolVar(&args.help, "h", false, "Display help messages with argument list and descriptions.")
-	flag.BoolVar(&args.unrendered, "u", false, "Retrieve markdown in unrendered format.")
-	flag.StringVar(&args.out, "o", "", "Save output to file. Used with -u to preserve format.")
-	flag.StringVar(&args.dir, "d", ".", "Specify directory or file path. Default is current directory.")
-	flag.StringVar(&args.exclude, "exclude", "", "Exclude specific files, directories, or other entities with regex.")
-	flag.IntVar(&args.lte, "lte", 0, "Display package counts less than or equal to specified integer.")
-	flag.IntVar(&args.gte, "gte", 0, "Display package counts greater than or equal to specified integer.")
+	var args models.Args
+
+	flag.BoolVar(&args.Help, "h", false, "Display help messages with argument list and descriptions.")
+	flag.BoolVar(&args.Unrendered, "u", false, "Retrieve markdown in unrendered format.")
+	flag.StringVar(&args.Out, "o", "", "Save output to file. Used with -u to preserve format.")
+	flag.StringVar(&args.Dir, "d", ".", "Specify directory or file path. Default is current directory.")
+	flag.StringVar(&args.Exclude, "exclude", "", "Exclude specific files, directories, or other entities with regex.")
+	flag.IntVar(&args.Lte, "lte", math.MaxInt, "Display package counts less than or equal to specified integer.")
+	flag.IntVar(&args.Gte, "gte", 0, "Display package counts greater than or equal to specified integer.")
 
 	flag.Parse()
-	if args.help {
+	if args.Help {
 		flag.PrintDefaults()
-		os.Exit(0)
+		return
 	}
 
-	run(args)
-}
+	// Handle signals for graceful shutdown
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 
-func run(args Args) {
-	moduleName, err := utils.GetModuleName(args.dir)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if args.lte == 0 {
-		args.lte = math.MaxInt
-	}
-	pkgCounter := NewPackageCounter(args.dir, moduleName, args.exclude, args.lte, args.gte)
-
-	err = pkgCounter.CountPackages()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	generatedMarkdown, err := pkgCounter.GenerateMarkdown()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	markdownBytes := []byte(generatedMarkdown)
-	if !args.unrendered {
-		markdownBytes = markdown.Render(generatedMarkdown, 80, 1)
-	}
-
-	if args.out == "" {
-		_, err = os.Stdout.Write(markdownBytes)
-		if err != nil {
-			return
+	go func() {
+		select {
+		case <-signalChan:
+			cancel()
+		case <-ctx.Done():
 		}
-	} else {
-		err = os.WriteFile(args.out, markdownBytes, 0777)
-		if err != nil {
-			return
-		}
+	}()
+
+	err := pkgcount.Run(ctx, args)
+	if err != nil {
+		log.Fatal(fmt.Errorf("failed to run pkgcount: %w", err))
 	}
 }

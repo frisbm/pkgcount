@@ -8,26 +8,33 @@ Example from this project:
 
 | Package        |        Count |
 | :---           |         ---: |
-|github.com/frisbm/pkgcount/utils |1 |
+|github.com/frisbm/pkgcount/internal/models |2 |
+|github.com/frisbm/pkgcount/internal/pkgcount |1 |
+|github.com/frisbm/pkgcount/internal/resultgroup |1 |
 
 **External Package Counts**
 
 | Package        |        Count |
 | :---           |         ---: |
-|strings |2 |
+|fmt |5 |
+|context |3 |
 |os |2 |
-|log |2 |
-|golang.org/x/exp/slices |1 |
-|os/exec |1 |
-|bytes |1 |
-|math |1 |
-|sync |1 |
-|flag |1 |
-|fmt |1 |
-|path/filepath |1 |
-|regexp |1 |
-|text/template |1 |
+|regexp |2 |
+|slices |2 |
+|strings |2 |
+|sync |2 |
 |bufio |1 |
+|bytes |1 |
+|errors |1 |
+|flag |1 |
+|log |1 |
+|math |1 |
+|os/exec |1 |
+|os/signal |1 |
+|path/filepath |1 |
+|sync/atomic |1 |
+|syscall |1 |
+|text/template |1 |
 
 
 ### Install
